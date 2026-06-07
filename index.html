@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Melbourne Garden Bed Health — City of Melbourne 2024</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap"
+    rel="stylesheet" />
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet" />
+  <script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+  <!-- ═══ SPLASH SCREEN ═══ -->
+  <div id="splash">
+    <div class="splash-inner">
+      <div class="splash-leaf">🌿</div>
+      <h1>Melbourne's<br /><em>Green Health</em></h1>
+      <p class="splash-sub">An interactive atlas of 4,345 garden beds across the City of Melbourne — assessed by Royal
+        Botanic Gardens Victoria, 2024</p>
+      <div class="splash-stats">
+        <div><span>4,345</span><small>Garden Beds</small></div>
+        <div><span>1,277</span><small>Plant Species</small></div>
+        <div><span>36.5%</span><small>Need Renewal</small></div>
+        <div><span>11</span><small>Neighbourhoods</small></div>
+      </div>
+      <button id="splash-enter">Explore the Map →</button>
+      <p class="splash-credit">Data: City of Melbourne · Royal Botanic Gardens Victoria</p>
+    </div>
+  </div>
+
+  <!-- ═══ MAIN LAYOUT ═══ -->
+  <div id="app">
+
+    <!-- HEADER -->
+    <header id="header">
+      <div id="header-left">
+        <span class="logo-dot"></span>
+        <h2>Melbourne Green Health</h2>
+      </div>
+      <nav id="nav-modes">
+        <button class="mode-btn active" data-mode="condition" title="Colour by condition">Condition</button>
+        <button class="mode-btn" data-mode="origin" title="Colour by plant origin">Origin</button>
+        <button class="mode-btn" data-mode="type" title="Colour by bed type">Bed Type</button>
+      </nav>
+      <div id="header-right">
+        <button id="filter-toggle" title="Filter beds">⚙ Filter</button>
+        <button id="stats-toggle" title="Dashboard">◫ Stats</button>
+      </div>
+    </header>
+
+    <!-- MAP -->
+    <div id="map"></div>
+
+    <!-- LEGEND -->
+    <div id="legend">
+      <div id="legend-title">Garden Bed Condition</div>
+      <div id="legend-items"></div>
+    </div>
+
+    <!-- TOOLTIP / POPUP -->
+    <div id="popup" class="popup hidden">
+      <button id="popup-close">✕</button>
+      <div id="popup-content"></div>
+    </div>
+
+    <!-- FILTER PANEL -->
+    <div id="filter-panel" class="panel hidden">
+      <h3>Filter Beds</h3>
+      <div class="filter-group">
+        <label>Condition</label>
+        <div class="checkbox-group" id="filter-condition"></div>
+      </div>
+      <div class="filter-group">
+        <label>Origin</label>
+        <div class="checkbox-group" id="filter-origin"></div>
+      </div>
+      <div class="filter-group">
+        <label>Bed Type</label>
+        <div class="checkbox-group" id="filter-type"></div>
+      </div>
+      <div class="filter-group">
+        <label>Neighbourhood</label>
+        <div class="checkbox-group" id="filter-neighbourhood"></div>
+      </div>
+      <div class="filter-actions">
+        <button id="filter-apply">Apply</button>
+        <button id="filter-reset">Reset</button>
+      </div>
+      <div id="filter-count"></div>
+    </div>
+
+    <!-- STATS DASHBOARD -->
+    <div id="stats-panel" class="panel hidden">
+      <div class="stats-header">
+        <h3>City-Wide Dashboard</h3>
+        <button class="panel-close" id="stats-close">✕</button>
+      </div>
+      <div class="stats-summary">
+        <div class="stat-card">
+          <div class="stat-num" id="stat-total">4,345</div>
+          <div class="stat-label">Total Beds</div>
+        </div>
+        <div class="stat-card warn">
+          <div class="stat-num" id="stat-poor">1,478</div>
+          <div class="stat-label">Need Renewal</div>
+        </div>
+        <div class="stat-card ok">
+          <div class="stat-num" id="stat-good">1,938</div>
+          <div class="stat-label">Good Condition</div>
+        </div>
+        <div class="stat-card spec">
+          <div class="stat-num">1,277</div>
+          <div class="stat-label">Plant Species</div>
+        </div>
+      </div>
+      <div class="charts-grid">
+        <div class="chart-box">
+          <div class="chart-label">Condition Distribution</div>
+          <canvas id="chart-condition"></canvas>
+        </div>
+        <div class="chart-box">
+          <div class="chart-label">Plant Origin</div>
+          <canvas id="chart-origin"></canvas>
+        </div>
+        <div class="chart-box wide">
+          <div class="chart-label">Condition by Neighbourhood (avg score 1–5)</div>
+          <canvas id="chart-neighbourhood"></canvas>
+        </div>
+        <div class="chart-box">
+          <div class="chart-label">Bed Types</div>
+          <canvas id="chart-bedtype"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- STORY PANEL (scrolly side panel) -->
+    <div id="story-panel">
+      <div id="story-tab" title="Open story">◁ Story</div>
+      <div id="story-inner">
+        <h3>The Story</h3>
+        <p class="story-intro">Scroll through key findings from the 2024 Royal Botanic Gardens Victoria assessment of
+          every garden bed in Melbourne.</p>
+        <div class="story-step active" data-zoom="12" data-lat="-37.807" data-lon="144.962" data-filter="none">
+          <span class="step-num">01</span>
+          <h4>The Full Picture</h4>
+          <p>4,345 shrub beds were assessed across the municipality. Nearly <strong>36.5%</strong> are in poor condition
+            or total failure — requiring urgent renewal investment.</p>
+        </div>
+        <div class="story-step" data-zoom="13.5" data-lat="-37.785" data-lon="144.951"
+          data-filter="condition:Poor condition,Total failure">
+          <span class="step-num">02</span>
+          <h4>Where Renewal Is Urgent</h4>
+          <p>Highlighted in red: beds in <strong>poor condition or failure</strong>. Royal Park, Kensington and West
+            Melbourne have high concentrations of degraded beds.</p>
+        </div>
+        <div class="story-step" data-zoom="13" data-lat="-37.807" data-lon="144.967" data-filter="origin:Exotic">
+          <span class="step-num">03</span>
+          <h4>Exotic Dominance</h4>
+          <p><strong>35%</strong> of beds are dominated by exotic species — not native to Australia. Exotic beds
+            actually have the best average condition ratings, raising questions about maintenance vs. ecological value.
+          </p>
+        </div>
+        <div class="story-step" data-zoom="13.5" data-lat="-37.787" data-lon="144.955" data-filter="origin:Indigenous">
+          <span class="step-num">04</span>
+          <h4>Indigenous Beds Under Pressure</h4>
+          <p>Beds planted with <strong>indigenous species</strong> (plants native to greater Melbourne) show the worst
+            condition outcomes — 50% rated poor or failure. These ecologically valuable beds need urgent support.</p>
+        </div>
+        <div class="story-step" data-zoom="13" data-lat="-37.807" data-lon="144.962" data-filter="none">
+          <span class="step-num">05</span>
+          <h4>Most Common Plant</h4>
+          <p><em>Lomandra longifolia</em> (Mat-rush) appears in <strong>17.3%</strong> of all beds — the most planted
+            species in Melbourne's public gardens. Indigenous grass-like perennials dominate the top 10.</p>
+        </div>
+        <div class="story-step" data-zoom="13.5" data-lat="-37.807" data-lon="144.946"
+          data-filter="type:Bioretention bed">
+          <span class="step-num">06</span>
+          <h4>Stormwater Gardens</h4>
+          <p><strong>143 bioretention beds</strong> across the city filter stormwater runoff. These specialised
+            plantings form part of Melbourne's water-sensitive urban design strategy.</p>
+        </div>
+        <div class="story-step" data-zoom="12" data-lat="-37.807" data-lon="144.962" data-filter="none">
+          <span class="step-num">07</span>
+          <h4>A Call to Action</h4>
+          <p>The data reveals a city at a crossroads: invest now in renewal, or face accelerating degradation of
+            Melbourne's green infrastructure. Explore the map to find beds in your neighbourhood.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ZOOM HINT -->
+    <div id="zoom-hint">Zoom in for individual bed polygons</div>
+
+  </div>
+
+  <script src="data.js"></script>
+  <script src="map.js"></script>
+</body>
+
+</html>
