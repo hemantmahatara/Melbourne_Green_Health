@@ -17,7 +17,8 @@
 
 // ─── TOKEN ───────────────────────────────────────────────────────────────
 // Public token for the City of Melbourne / coursework map. Replace if needed.
-mapboxgl.accessToken = 'pk.eyJ1IjoiczQyMTkyODQiLCJhIjoiY21vZ2pvZ3J6MHp1NTJwb2twYWtpeHdzYyJ9.W5RlO10Lr3bIrfe7rg2Y6Q';
+mapboxgl.accessToken =                   
+  ;
 
 // ─── COLOUR PALETTES ─────────────────────────────────────────────────────
 
